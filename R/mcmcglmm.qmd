@@ -1,0 +1,469 @@
+---
+title: "The Interplay of Floral Rewards and Floral Symmetry Shapes Diversification Dynamics in an Amazonian Tree Family"
+author: "Diego da Silva Graciano1*, Elisabeth Dantas Tolkë1 e Sandra Maria Carmello-Guerreiro1"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+format: 
+  html:
+    code-fold: true
+    embed-resources: true
+    theme:
+      light: spacelab
+      dark: superhero
+    fontsize: 1.2em
+    max-width: 1920px
+---
+
+```{r}
+#| echo: false
+#| label: setup
+#| warning: false
+#| message: false
+
+library("here")
+library("ape")
+library("RPANDA")
+library("MCMCglmm")
+library("ggplot2")
+library("ggdist")
+library("ggtree")
+library("MetBrewer")
+library("patchwork")
+library("ggraph")
+library("igraph")
+library("circlize")
+
+i_am("R/mcmcglmm.qmd")
+
+## loading CLaDS results
+
+load(here("output/chronogram_v2_no_clads1.RData"))
+
+## loading trait data
+
+traits <- read.csv(here("data/trait_data.csv"))
+
+## adding rates to the trait table
+
+traits$lambda <- CladsOutput$lambdatip_map[match(traits$species, CladsOutput$tree$tip.label)]
+
+## ## inferring mu using lambda values and global epsilon
+
+## traits$mu_estim <- traits$lambda * CladsOutput$eps_map
+
+## ## calculating net diversification
+
+## traits$netdiv <- traits$lambda - traits$mu_estim
+
+```
+
+# Material & Methods
+
+@fig-trait-rate-phylo shows the phylogeny obtained from Vargas \& Dick (2020) including 110 species of Lecythidoideae, and includes both information of trait states and speciation rates.
+
+```{r}
+#| echo: true
+#| label: fig-trait-rate-phylo
+#| warning: false
+#| message: false
+#| column: page
+#| fig.width: 10
+#| fig.height: 20
+#| fig-cap: "Phylogeny of Lecythidoideae displaying the distribution of trait states in the tips and speciation rates. The colors of the symbols at the tips describe the trait state, while both the icon size and the plot to the right show the distribution of speciation rates estimated using CLaDS."
+
+p0 <- ggtree(CladsOutput$tree) %<+% traits
+
+p1 <-
+    p0 +
+    geom_tippoint(aes(color = factor(state), size = lambda)) +
+    scale_color_manual(values = c(met.brewer("Hokusai1", n = 3, type = "discrete")), label = c("Nectar + Monosymmetry", "Pollen + Monosymmetry", "Pollen + Polysymmetry")) +
+    labs(color = "Trait State", size = "Speciation Rate") +
+    theme(legend.position = c(0.2, 0.9))
+
+traits2 <- traits
+traits2$species <- factor(gsub("_", " ", traits2$species), levels = rev(gsub("_", " ", get_taxa_name(p0))))
+
+p.lambda <-
+    ggplot(traits2) +
+    geom_point(aes(x = lambda, y = species, colour = factor(state)), size = 2) +
+    geom_vline(xintercept = mean(traits2$lambda), linetype = "dashed", color = "darkgrey") +
+    scale_y_discrete(position = "right") +
+    scale_color_manual(values = c(met.brewer("Hokusai1", n = 3, type = "discrete"))) +
+    labs(x = "Speciation Rate", y = "Species") +
+    cowplot::theme_cowplot() +
+    theme(axis.title.y = element_blank(),
+          axis.text.x = element_text(angle = 45, size = 10, hjust = 1),
+          axis.ticks.y = element_blank(),
+          axis.line.y = element_blank(),
+          legend.position = "none")
+
+(p1 | p.lambda) +
+    plot_layout(widths = c(0.5, 0.1))
+
+```
+
+## Bayesian MuSSE analysis
+
+We used the MuSSE model to estimate the state-dependent diversification rates(REF diversitree). We fitted the full model, including transitions that could be unlikely given the nature of our trait (q13 <-> q31). We decided to keep these transitions as free parameters since the sampling fraction in our phylogeny is rather low (0.474), and by freeing those parameters to be estimated we hope to capture some underlying double transitions that might have been detected if we were able to include more species in the analysis. We fitted this model in a Bayesian framework using the scripts available from ![Daniele Silvestro's github repository](https://github.com/dsilvestro/mcmc-diversitree) that was used in a similar context in previous studies (Burin _et al._ 2016). To ensure a good mixing of the MCMC, we set the sliding window parameters to one order of magnitude higher than the default values, and ran the chain for 2 million generations, sampling every 2000, resulting in a posterior distribution of 1000 samples. We checked for convergence by visual inspection (@fig-musse-convergence) of trace plots and by ensuring the effective sample size was greater than 200 for most parameters.
+
+```{r}
+#| echo: true
+#| label: fig-musse-convergence
+#| warning: false
+#| message: false
+#| column: page
+#| fig.width: 20
+#| fig.height: 10
+#| fig-cap: "Trace plot for the likelihood values of the Bayesian MuSSE analysis. It is possible to see that convergence was achieved given that the post-burnin values of likelihood vary around a central value."
+
+musse.out <- read.table(file = here("output/MuSSE/tree_lecy.tre_musse_mcmc.log"), sep = "\t", header = TRUE)
+#musse.out <- read.table("./MuSSE_GB/tree_lecy.tre_musse_mcmc.log", sep = "\t", header = TRUE)
+musse.out <- musse.out[(floor(nrow(musse.out) * 0.1)):nrow(musse.out),]
+
+ggplot(musse.out) +
+    geom_line(aes(x = Iteration, y = likelihood)) +
+    cowplot::theme_cowplot()
+
+```
+
+@tbl-ess shows the ESS values for the likelihood and for each parameter's posterior distribution.
+
+```{r}
+#| echo: true
+#| label: tbl-ess
+#| warning: false
+#| message: false
+#| column: page
+#| fig.width: 20
+#| fig.height: 10
+#| tbl-cap: "ESS values for the global likelihood and each of the estimated parameters in MuSSE."
+
+ess.musse <- data.frame(Parameter = c("likelihood",
+                                      paste0("lambda", 1:3),
+                                      paste0("mu", 1:3),
+                                      "q12",
+                                      "q13",
+                                      "q21",
+                                      "q23",
+                                      "q31",
+                                      "q32"),
+                        ESS = c(coda::effectiveSize(musse.out$likelihood),
+                                coda::effectiveSize(musse.out$lambda1),
+                                coda::effectiveSize(musse.out$lambda2),
+                                coda::effectiveSize(musse.out$lambda3),
+                                coda::effectiveSize(musse.out$mu1),
+                                coda::effectiveSize(musse.out$mu2),
+                                coda::effectiveSize(musse.out$mu3),
+                                coda::effectiveSize(musse.out$q12),
+                                coda::effectiveSize(musse.out$q13),
+                                coda::effectiveSize(musse.out$q21),
+                                coda::effectiveSize(musse.out$q23),
+                                coda::effectiveSize(musse.out$q31),
+                                coda::effectiveSize(musse.out$q32)
+                                )
+                        )
+
+knitr::kable(ess.musse)
+
+```
+
+
+## Generalized Linear Mixed Models
+
+> Quick note: state 0 for the MuSSE analyses in the manuscript correspond to state 3 here (Pollen + Polysymmetry)
+
+We acknowledge that the selected MuSSE model can be seen as quite parameter-rich for the size of our phylogeny, rendering the parameter estimates questionable at best. To provide some more information to the discussion regarding rate differences between states we used generalized linear mixed models to test for differences in speciation rates at present between each of the three states. We used the speciation rates estimated at the tips of the phylogeny using CLaDS (REF), and grouped the species according to the three states of the composite trait. We set the sampling fraction to 0.43, and sampled 100 trees from the collection of trees derived from the data augmentation process.
+
+To fit the mixed models to our data, we used the MCMCglmm package in R (REF), which implements generalized linear mixed models in a Bayesian framework that allows us to include different sources of uncertainty in parameter estimation. We ran the chains for 5 million generations, discarding the first 50% as burnin, and sampled every 2500 generations resulting in a posterior distribution of 1000 samples. We used inverse Wishart distributions as priors for the fixed and random effects, and assessed the effect size of each state by analysing the asymmetries of the posterior distributions in relation to zero (which would mean no effect).
+
+```{r}
+#| echo: true
+#| label: model-setup
+#| warning: false
+#| message: false
+#| eval: false
+
+## setting up priors
+
+my_priors <- list(R = list(V = 1/2, nu = 0.002),
+                  G = list(G1 = list(V = 1/2, nu = 0.002)))
+
+## running the model
+
+model1 <- MCMCglmm(fixed = rates ~ factor(state),
+                   random = ~ species,
+                   family = "gaussian",
+                   ginverse = list(species = inverseA(phytools::force.ultrametric(CladsOutput$tree, method = "nnls"))$Ainv),
+                   nitt = c(5000000),
+                   burnin = c(2500000),
+                   thin = c(2500),
+                   prior = my_priors,
+                   data = traits)
+
+## saving output
+
+saveRDS(model1, file = here("output/mcmcglmm_results.RDS"))
+
+```
+
+# Results
+
+## Bayesian MuSSE analysis
+
+The posterior distribution of speciation, extinction and net diversification rates for each state of the trait are represented in @fig-musse-lambmu.
+
+```{r}
+#| echo: true
+#| label: fig-musse-lambmu
+#| warning: false
+#| message: false
+#| column: page
+#| fig.width: 15
+#| fig.height: 20
+#| fig-cap: "Posterior distribution of speciation (A), extinction (B), and net diversification (C) rates from MuSSE for each trait state. The dots represent the binned parameter values and their respective frequency, whereas the curve denotes the posterior probability density of parameter values. For each state, the dots, thick lines and thin lines represent, respectively, the median, the 83% and 95% credibility intervals."
+
+musse.plot.lambda <- reshape2::melt(musse.out[, 6:8])
+
+plot.lambda <-
+    ggplot(musse.plot.lambda, aes(x = value, y = variable, fill = variable, color = variable)) +
+    stat_slab(aes(thickness = after_stat(pdf * n)), scale = 0.7, alpha = 0.3) +
+    stat_dotsinterval(side = "top", scale = 0.4, slab_linewidth = NA, .width = c(0.83, 0.95)) +
+    scale_fill_manual(values = c(met.brewer("Hokusai1", n = 3, type = "discrete", direction = 1)), labels = c("Nectar + Monosymmetry", "Pollen + Monosymmetry", "Pollen + Polysymmetry")) +
+    scale_color_manual(values = c(met.brewer("Hokusai1", n = 3, type = "discrete", direction = 1)), labels = c("Nectar + Monosymmetry", "Pollen + Monosymmetry", "Pollen + Polysymmetry")) +
+    #geom_vline(xintercept = 0, linetype = "dashed", colour = "darkgrey") +
+    labs(x = "Speciation Rate", color = "Trait Combination", fill = "Trait Combination") +
+    cowplot::theme_cowplot(font_size = 30) +
+    theme(legend.position = "none",
+          legend.text = element_text(size = 20),
+          axis.text.y = element_blank(),
+          axis.title.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          axis.line.y = element_blank())
+
+musse.plot.mu <- reshape2::melt(musse.out[, 9:11])
+
+plot.mu <-
+    ggplot(musse.plot.mu, aes(x = value, y = variable, fill = variable, color = variable)) +
+    stat_slab(aes(thickness = after_stat(pdf * n)), scale = 0.7, alpha = 0.3) +
+    stat_dotsinterval(side = "top", scale = 0.4, slab_linewidth = NA, .width = c(0.83, 0.95)) +
+    scale_fill_manual(values = c(met.brewer("Hokusai1", n = 3, type = "discrete", direction = 1)), labels = c("Nectar + Monosymmetry", "Pollen + Monosymmetry", "Pollen + Polysymmetry")) +
+    scale_color_manual(values = c(met.brewer("Hokusai1", n = 3, type = "discrete", direction = 1)), labels = c("Nectar + Monosymmetry", "Pollen + Monosymmetry", "Pollen + Polysymmetry")) +
+    #geom_vline(xintercept = 0, linetype = "dashed", colour = "darkgrey") +
+    labs(x = "Extinction Rate", color = "Trait Combination", fill = "Trait Combination") +
+    cowplot::theme_cowplot(font_size = 30) +
+    theme(legend.position = "none",
+          legend.text = element_text(size = 20),
+          axis.text.y = element_blank(),
+          axis.title.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          axis.line.y = element_blank())
+
+
+musse.plot.r <- reshape2::melt(musse.out[, 6:8] - musse.out[, 9:11])
+
+plot.r <-
+    ggplot(musse.plot.r, aes(x = value, y = variable, fill = variable, color = variable)) +
+    stat_slab(aes(thickness = after_stat(pdf * n)), scale = 0.7, alpha = 0.3) +
+    stat_dotsinterval(side = "top", scale = 0.4, slab_linewidth = NA, .width = c(0.83, 0.95)) +
+    scale_fill_manual(values = c(met.brewer("Hokusai1", n = 3, type = "discrete", direction = 1)), labels = c("Nectar + Monosymmetry", "Pollen + Monosymmetry", "Pollen + Polysymmetry")) +
+    scale_color_manual(values = c(met.brewer("Hokusai1", n = 3, type = "discrete", direction = 1)), labels = c("Nectar + Monosymmetry", "Pollen + Monosymmetry", "Pollen + Polysymmetry")) +
+    #geom_vline(xintercept = 0, linetype = "dashed", colour = "darkgrey") +
+    labs(x = "Net Diversification Rate", color = "Trait Combination", fill = "Trait Combination") +
+    cowplot::theme_cowplot(font_size = 30) +
+    theme(legend.position = "bottom",
+          legend.justification = "center",
+          legend.text = element_text(size = 20),
+          axis.text.y = element_blank(),
+          axis.title.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          axis.line.y = element_blank())
+
+
+(plot.lambda / plot.mu / plot.r) +
+    plot_annotation(tag_levels = "A")
+
+```
+
+To test for differences between the rates from each state, we generated posterior distributions of speciation (A), extinction (B) and net diversification (C) rate differences (@fig-musse-differences). To do that, we set one of the states as the reference (in this case "Pollen + Polysymmetry"), and calculated the differences between the estimated rates for this state in relation to the others (i.e. difference in rates between "Pollen + Polysymmetry" and "Nectar + Monosymmetry" and "Pollen + Polysymmetry" and "Pollen + Monosymmetry"). This way, positive values indicate that the reference state has higher rates than the other two states, and vice-versa.
+
+```{r}
+#| echo: true
+#| label: fig-musse-differences
+#| warning: false
+#| message: false
+#| column: page
+#| fig.width: 20
+#| fig.height: 20
+#| fig-cap: "Median of posterior distribution of differences in speciation (A), extinction (B) and net diversification (C) rates from MuSSE for each trait state in relation to 'Pollen + Polysymmetry'. The dots represent the binned parameter values and their respective frequency, whereas the curve denotes the posterior probability density of parameter values. For each state, the dots, thick lines and thin lines represent, respectively, the median, the 83% and 95% credibility intervals."
+
+lambda.diff <- musse.plot.lambda
+lambda.diff$diff <- lambda.diff$value - rep(lambda.diff$value[lambda.diff$variable == "lambda3"], 3)
+lambda.diff <- lambda.diff[1:1802,]
+
+lambda.diff.plot <- 
+    ggplot(lambda.diff, aes(x = diff, y = variable, fill = variable, color = variable)) +
+    stat_slab(aes(thickness = after_stat(pdf * n)), scale = 0.7, alpha = 0.3) +
+    stat_dotsinterval(side = "top", scale = 0.4, slab_linewidth = NA, .width = c(0.83, 0.95)) +
+    scale_fill_manual(values = c(met.brewer("Hokusai1", n = 3, type = "discrete", direction = 1))[1:2], labels = c("Nectar + Monosymmetry", "Pollen + Monosymmetry", "Pollen + Polysymmetry")[1:2]) +
+    scale_color_manual(values = c(met.brewer("Hokusai1", n = 3, type = "discrete", direction = 1))[1:2], labels = c("Nectar + Monosymmetry", "Pollen + Monosymmetry", "Pollen + Polysymmetry")[1:2]) +
+                                        #geom_vline(xintercept = 0, linetype = "dashed", colour = "darkgrey") +
+    labs(x = "Speciation Rate Difference", color = "Trait Combination", fill = "Trait Combination") +
+    xlim(-0.1, 0.4) +
+    geom_vline(xintercept = 0, linetype = "dashed", colour = "lightgrey", linewidth = 1.5) +
+    cowplot::theme_cowplot(font_size = 30) +
+    theme(legend.position = "none",
+          legend.justification = "center",
+          legend.text = element_text(size = 20),
+          axis.text.y = element_blank(),
+          axis.title.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          axis.line.y = element_blank())
+
+
+mu.diff <- musse.plot.mu
+mu.diff$diff <- mu.diff$value - rep(mu.diff$value[mu.diff$variable == "mu3"], 3)
+mu.diff <- mu.diff[1:1802,]
+
+mu.diff.plot <- 
+    ggplot(mu.diff, aes(x = diff, y = variable, fill = variable, color = variable)) +
+    stat_slab(aes(thickness = after_stat(pdf * n)), scale = 0.7, alpha = 0.3) +
+    stat_dotsinterval(side = "top", scale = 0.4, slab_linewidth = NA, .width = c(0.83, 0.95)) +
+    scale_fill_manual(values = c(met.brewer("Hokusai1", n = 3, type = "discrete", direction = 1))[1:2], labels = c("Nectar + Monosymmetry", "Pollen + Monosymmetry", "Pollen + Polysymmetry")[1:2]) +
+    scale_color_manual(values = c(met.brewer("Hokusai1", n = 3, type = "discrete", direction = 1))[1:2], labels = c("Nectar + Monosymmetry", "Pollen + Monosymmetry", "Pollen + Polysymmetry")[1:2]) +
+                                        #geom_vline(xintercept = 0, linetype = "dashed", colour = "darkgrey") +
+    labs(x = "Extinction Rate Difference", color = "Trait Combination", fill = "Trait Combination") +
+    xlim(-0.1, 0.4) +
+    geom_vline(xintercept = 0, linetype = "dashed", colour = "lightgrey", linewidth = 1.5) +
+    cowplot::theme_cowplot(font_size = 30) +
+    theme(legend.position = "none",
+          legend.justification = "center",
+          legend.text = element_text(size = 20),
+          axis.text.y = element_blank(),
+          axis.title.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          axis.line.y = element_blank())
+
+
+netdiv.diff <- musse.plot.r
+netdiv.diff$diff <- netdiv.diff$value - rep(netdiv.diff$value[netdiv.diff$variable == "lambda3"], 3)
+netdiv.diff <- netdiv.diff[1:1802,]
+
+netdiv.diff.plot <- 
+    ggplot(netdiv.diff, aes(x = diff, y = variable, fill = variable, color = variable)) +
+    stat_slab(aes(thickness = after_stat(pdf * n)), scale = 0.7, alpha = 0.3) +
+    stat_dotsinterval(side = "top", scale = 0.4, slab_linewidth = NA, .width = c(0.83, 0.95)) +
+    scale_fill_manual(values = c(met.brewer("Hokusai1", n = 3, type = "discrete", direction = 1))[1:2], labels = c("Nectar + Monosymmetry", "Pollen + Monosymmetry", "Pollen + Polysymmetry")[1:2]) +
+    scale_color_manual(values = c(met.brewer("Hokusai1", n = 3, type = "discrete", direction = 1))[1:2], labels = c("Nectar + Monosymmetry", "Pollen + Monosymmetry", "Pollen + Polysymmetry")[1:2]) +
+                                        #geom_vline(xintercept = 0, linetype = "dashed", colour = "darkgrey") +
+    labs(x = "Net Diversification Rate Difference", color = "Trait Combination", fill = "Trait Combination") +
+    xlim(-0.1, 0.4) +
+    geom_vline(xintercept = 0, linetype = "dashed", colour = "lightgrey", linewidth = 1.5) +
+    cowplot::theme_cowplot(font_size = 30) +
+    theme(legend.position = "bottom",
+          legend.justification = "center",
+          legend.text = element_text(size = 20),
+          axis.text.y = element_blank(),
+          axis.title.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          axis.line.y = element_blank())
+
+(lambda.diff.plot / mu.diff.plot / netdiv.diff.plot) +
+    plot_annotation(tag_levels = "A")
+
+```
+
+Lastly, the transition rates estimated from MuSSE are shown in @fig-musse-transitions.
+
+```{r}
+#| echo: true
+#| label: fig-musse-transitions
+#| warning: false
+#| message: false
+#| column: page
+#| fig.width: 20
+#| fig.height: 20
+#| fig-cap: "Median of posterior distribution of transition rates from MuSSE for each trait state. The bands describe the transition rates out of each state and towards the states indicated by the arrows, and the width of the bands denote the value of the rate. Crimson: Nectar + Monosymmetry; Green: Pollen + Monosymmetry; Blue: Pollen + Polysymmetry. It is important to note that the absolute values of transition rates are very low (in the order of 10^-3^)."
+
+musse.plot.trans <- reshape2::melt(musse.out[, 12:17])
+
+trans.net <- aggregate(musse.plot.trans$value, by = list(musse.plot.trans$variable), FUN = median)
+names(trans.net) <- c("node", "value")
+
+trans.mat <- matrix(0, nrow = 3, ncol = 3)
+trans.mat[upper.tri(trans.mat)] <- trans.net$value[c(1, 2, 4)]
+trans.mat[lower.tri(trans.mat)] <- trans.net$value[c(3, 5, 6)]
+colnames(trans.mat) <- c("Nectar + Monosymmetry", "Pollen + Monosymmetry", "Pollen + Polysymmetry")
+rownames(trans.mat) <- c("Nectar + Monosymmetry", "Pollen + Monosymmetry", "Pollen + Polysymmetry")
+
+
+cols <- c(met.brewer("Hokusai1", n = 3, type = "discrete", direction = 1))
+arr.col <- data.frame(c("Nectar + Monosymmetry", "Nectar + Monosymmetry", "Pollen + Monosymmetry", "Pollen + Monosymmetry", "Pollen + Polysymmetry", "Pollen + Polysymmetry"),
+                      c("Pollen + Monosymmetry", "Pollen + Polysymmetry", "Nectar + Monosymmetry", "Pollen + Polysymmetry", "Nectar + Monosymmetry", "Pollen + Monosymmetry"),
+                      rep(cols, each = 2))
+
+circos.par(gap.after = rep(20, 3))
+chordDiagram(trans.mat,
+             preAllocateTracks = list(grid.col = setNames(cols, rownames(trans.mat)),
+                                      track.height = max(strwidth(unlist(dimnames(trans.mat))))),
+             row.col = cols,
+             grid.col = setNames(cols, rownames(trans.mat)),
+             annotationTrack = c("grid", "axis"),
+             annotationTrackHeight = c(0.05, 0.05),
+             order = rownames(trans.mat),
+             directional = 1,
+             direction.type = "arrows",
+             link.arr.col = arr.col,
+             link.arr.lwd = 3,
+             link.arr.length = 1.5,
+             transparency = 0.75
+             )
+circos.track(track.index = 1, panel.fun = function(x, y) {
+    circos.text(CELL_META$xcenter, CELL_META$ylim[1], CELL_META$sector.index, 
+        facing = "bending.outside", niceFacing = TRUE, adj = c(0.5, 1.2), cex = 3.5)
+}, bg.border = NA)
+circos.clear()
+
+```
+
+
+## Generalized Linear Mixed Models 
+
+The posterior distribution of parameter values indicate that species presenting the syndrome comprising "Pollen + Polysymmetry" have the highest speciation rates (@fig-model-summary bottom). The rates for those species are significantly different than the other two given that there is no overlap between the credibility intervals. For the other two states (namely "Pollen + Monosymmetry and Nectar + Monosymmetry"), the posterior distribution of parameter valuesshow a large overlap between each other, indicating that these two states do not differ in terms of speciation rates (@fig-model-summary top and middle). These results are congruent with the results obtained using MuSSE, which reinforces this pattern. However, it is important to note that the extinction rates obtained from MuSSE are much higher than the ones estimated from CLaDS (via $\epsilon$ - namely between 0.003 and 0.01 for CLaDS _versus_ between 0.168 and 0.474 from MuSSE).
+
+```{r}
+#| echo: true
+#| label: fig-model-summary
+#| warning: false
+#| message: false
+#| column: page
+#| fig.width: 20
+#| fig.height: 15
+#| fig-cap: "Posterior distribution of parameters describing the relationship between speciation rates from CLaDS and trait state. The dots represent the binned parameter values and their respective frequency, whereas the curve denotes the posterior probability density of parameter values. For each state, the dots, thick lines and thin lines represent, respectively, the median, the 83% and 95% credibility intervals. The only state with significant effect is 'Pollen + Polysymmetric' (bottom distribution) since it is the only one that neither credibility intervals include 0."
+
+model1 <- readRDS(file = here("output/mcmcglmm_results.RDS"))
+
+result.table <- as.data.frame(model1$Sol)
+names(result.table) <- c("Pollen + Polysymmetry", "Pollen + Monosymmetry", "Nectar + Monosymmetry")
+
+result.plot <- reshape2::melt(result.table)
+
+ggplot(result.plot, aes(y = variable, x = value, fill = variable)) +
+    stat_slab(aes(thickness = after_stat(pdf * n)), scale = 0.7, alpha = 0.3) +
+    stat_dotsinterval(side = "top", scale = 0.4, slab_linewidth = NA, .width = c(0.83, 0.95)) +
+    scale_fill_manual(values = c(met.brewer("Hokusai1", n = 3, type = "discrete", direction = -1))) +
+    geom_vline(xintercept = 0, linetype = "dashed", colour = "darkgrey") +
+    labs(x = "Slope", y = "Trait Combination", fill = "Trait Combination") +
+    cowplot::theme_cowplot(font_size = 30) +
+    theme(legend.position = c(0.75, 0.8),
+          legend.text = element_text(size = 20),
+          axis.text.y = element_blank(),
+          axis.title.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          axis.line.y = element_blank())
+
+```
+
+# Discussion
+
+The results from the MuSSE analysis indicate that species with the combination of "Pollen + Polysymmetry" have higher net diversification rates than species with other states (@fig-musse-lambmu). This is caused by a combination of slightly higher speciation rates and slightly lower extinction rates (@fig-musse-differences). Also, the transition dynamics estimated with MuSSE indicates that the different richnesses in each trait state seems to be mainly caused by the speciation/extinction dynamics rather than by transitions, given that the rates do not differ much between states and that the absolute values for the transition rates are very low (in the order of 10^-3^, which represents one transition every 1000 million years on average - @fig-musse-transitions).
+
+The results from the linear models suggest that the speciation rates seems to be considerably higher for "Pollen + Polysymmetry" than for the other states (@fig-model-summary). 

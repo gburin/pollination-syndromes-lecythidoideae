@@ -1,0 +1,233 @@
+#NEXUS
+[R-package APE, Wed Mar  6 10:46:40 2024]
+
+BEGIN TAXA;
+	DIMENSIONS NTAX = 110;
+	TAXLABELS
+		Eschweilera_coriacea
+		Eschweilera_parviflora
+		Eschweilera_wachenheimii
+		Eschweilera_apiculata
+		Eschweilera_collina
+		Eschweilera_pseudodecolorans
+		Eschweilera_truncata
+		Eschweilera_parvifolia
+		Eschweilera_bracteosa
+		Eschweilera_laevicarpa
+		Eschweilera_atropetiolata
+		Eschweilera_cyathiformis
+		Eschweilera_rankiniae
+		Eschweilera_albiflora
+		Eschweilera_grandiflora
+		Eschweilera_chartaceifolia
+		Eschweilera_pedicellata
+		Eschweilera_sagotiana
+		Eschweilera_micrantha
+		Eschweilera_decolorans
+		Eschweilera_subglandulosa
+		Eschweilera_hondurensis
+		Eschweilera_ovata
+		Eschweilera_alata
+		Eschweilera_biflava
+		Eschweilera_neei
+		Eschweilera_pittieri
+		Eschweilera_mexicana
+		Eschweilera_juruensis
+		Eschweilera_tenuifolia
+		Lecythis_corrugata
+		Lecythis_idatimon
+		Lecythis_pneumatophora
+		Lecythis_persistens
+		Lecythis_confertiflora
+		Corythophora_alta
+		Corythophora_rimosa
+		Corythophora_amapaensis
+		Corythophora_labriculata
+		Lecythis_ampla
+		Lecythis_zabucajo
+		Lecythis_lanceolata
+		Lecythis_pisonis
+		Eschweilera_amazoniciformis
+		Lecythis_barnebyi
+		Lecythis_poiteaui
+		Lecythis_prancei
+		Lecythis_lurida
+		Lecythis_schwackei
+		Lecythis_minor
+		Lecythis_tuyrana
+		Lecythis_ollaria
+		Eschweilera_alvimii
+		Eschweilera_tetrapetala
+		Eschweilera_nana
+		Eschweilera_aguilarii
+		Eschweilera_sessilis
+		Eschweilera_panamensis
+		Eschweilera_collinsii
+		Eschweilera_jacquelyniae
+		Eschweilera_calyculata
+		Eschweilera_pachyderma
+		Eschweilera_amplexifolia
+		Eschweilera_antioquensis
+		Eschweilera_sclerophylla
+		Eschweilera_integrifolia
+		Eschweilera_caudiculata
+		Eschweilera_rimbachii
+		Eschweilera_andina
+		Eschweilera_tessmannii
+		Eschweilera_ovalifolia
+		Lecythis_gracieana
+		Lecythis_parvifructa
+		Lecythis_rorida
+		Lecythis_alutacea
+		Lecythis_chartacea
+		Lecythis_congestiflora
+		Lecythis_simiorum
+		Lecythis_holcogyne
+		Lecythis_brancoensis
+		Lecythis_retusa
+		Bertholletia_excelsa
+		Couratari_guianensis
+		Couratari_oblongifolia
+		Couratari_calycina
+		Couratari_multiflora
+		Cariniana_domestica
+		Cariniana_estrellensis
+		Cariniana_ianeirensis
+		Couratari_macrosperma
+		Couratari_stellata
+		Couratari_scottmorii
+		Allantoma_decandra
+		Allantoma_integrifolia
+		Allantoma_lineata
+		Couroupita_guianensis
+		Couroupita_nicaraguarensis
+		Couroupita_subsessilis
+		Gustavia_serrata
+		Gustavia_speciosa
+		Gustavia_macarenensis
+		Gustavia_augusta
+		Gustavia_monocaulis
+		Gustavia_superba
+		Gustavia_longifolia
+		Gustavia_dubia
+		Gustavia_hexapetala
+		Grias_cauliflora
+		Grias_multinervia
+		Grias_peruviana
+	;
+END;
+BEGIN TREES;
+	TRANSLATE
+		1	Eschweilera_coriacea,
+		2	Eschweilera_parviflora,
+		3	Eschweilera_wachenheimii,
+		4	Eschweilera_apiculata,
+		5	Eschweilera_collina,
+		6	Eschweilera_pseudodecolorans,
+		7	Eschweilera_truncata,
+		8	Eschweilera_parvifolia,
+		9	Eschweilera_bracteosa,
+		10	Eschweilera_laevicarpa,
+		11	Eschweilera_atropetiolata,
+		12	Eschweilera_cyathiformis,
+		13	Eschweilera_rankiniae,
+		14	Eschweilera_albiflora,
+		15	Eschweilera_grandiflora,
+		16	Eschweilera_chartaceifolia,
+		17	Eschweilera_pedicellata,
+		18	Eschweilera_sagotiana,
+		19	Eschweilera_micrantha,
+		20	Eschweilera_decolorans,
+		21	Eschweilera_subglandulosa,
+		22	Eschweilera_hondurensis,
+		23	Eschweilera_ovata,
+		24	Eschweilera_alata,
+		25	Eschweilera_biflava,
+		26	Eschweilera_neei,
+		27	Eschweilera_pittieri,
+		28	Eschweilera_mexicana,
+		29	Eschweilera_juruensis,
+		30	Eschweilera_tenuifolia,
+		31	Lecythis_corrugata,
+		32	Lecythis_idatimon,
+		33	Lecythis_pneumatophora,
+		34	Lecythis_persistens,
+		35	Lecythis_confertiflora,
+		36	Corythophora_alta,
+		37	Corythophora_rimosa,
+		38	Corythophora_amapaensis,
+		39	Corythophora_labriculata,
+		40	Lecythis_ampla,
+		41	Lecythis_zabucajo,
+		42	Lecythis_lanceolata,
+		43	Lecythis_pisonis,
+		44	Eschweilera_amazoniciformis,
+		45	Lecythis_barnebyi,
+		46	Lecythis_poiteaui,
+		47	Lecythis_prancei,
+		48	Lecythis_lurida,
+		49	Lecythis_schwackei,
+		50	Lecythis_minor,
+		51	Lecythis_tuyrana,
+		52	Lecythis_ollaria,
+		53	Eschweilera_alvimii,
+		54	Eschweilera_tetrapetala,
+		55	Eschweilera_nana,
+		56	Eschweilera_aguilarii,
+		57	Eschweilera_sessilis,
+		58	Eschweilera_panamensis,
+		59	Eschweilera_collinsii,
+		60	Eschweilera_jacquelyniae,
+		61	Eschweilera_calyculata,
+		62	Eschweilera_pachyderma,
+		63	Eschweilera_amplexifolia,
+		64	Eschweilera_antioquensis,
+		65	Eschweilera_sclerophylla,
+		66	Eschweilera_integrifolia,
+		67	Eschweilera_caudiculata,
+		68	Eschweilera_rimbachii,
+		69	Eschweilera_andina,
+		70	Eschweilera_tessmannii,
+		71	Eschweilera_ovalifolia,
+		72	Lecythis_gracieana,
+		73	Lecythis_parvifructa,
+		74	Lecythis_rorida,
+		75	Lecythis_alutacea,
+		76	Lecythis_chartacea,
+		77	Lecythis_congestiflora,
+		78	Lecythis_simiorum,
+		79	Lecythis_holcogyne,
+		80	Lecythis_brancoensis,
+		81	Lecythis_retusa,
+		82	Bertholletia_excelsa,
+		83	Couratari_guianensis,
+		84	Couratari_oblongifolia,
+		85	Couratari_calycina,
+		86	Couratari_multiflora,
+		87	Cariniana_domestica,
+		88	Cariniana_estrellensis,
+		89	Cariniana_ianeirensis,
+		90	Couratari_macrosperma,
+		91	Couratari_stellata,
+		92	Couratari_scottmorii,
+		93	Allantoma_decandra,
+		94	Allantoma_integrifolia,
+		95	Allantoma_lineata,
+		96	Couroupita_guianensis,
+		97	Couroupita_nicaraguarensis,
+		98	Couroupita_subsessilis,
+		99	Gustavia_serrata,
+		100	Gustavia_speciosa,
+		101	Gustavia_macarenensis,
+		102	Gustavia_augusta,
+		103	Gustavia_monocaulis,
+		104	Gustavia_superba,
+		105	Gustavia_longifolia,
+		106	Gustavia_dubia,
+		107	Gustavia_hexapetala,
+		108	Grias_cauliflora,
+		109	Grias_multinervia,
+		110	Grias_peruviana
+	;
+	TREE * UNTITLED = [&R] ((((((((((((((((((((((1:0.9763706722,2:0.9763706722):2.340463676,3:3.316834348):2.253875245,(4:3.283358064,5:3.283358064):2.287351529):0.5222433415,(6:3.332508492,7:3.332508492):2.760444442):0.8647814129,8:6.957734347):1.125568749,(9:3.559110023,10:3.559110023):4.524193073):1.356830761,((((11:3.493054079,12:3.493054079):1.053234888,13:4.546288967):1.582981261,(14:4.906434854,15:4.906434854):1.222835374):1.572741581,16:7.702011809):1.738122048):0.3702747262,(((((17:3.830352809,18:3.830352809):0.4816755191,19:4.312028328):0.6926832149,(20:3.877961792,21:3.877961792):1.126749751):2.052401957,22:7.0571135):2.061948405,23:9.119061905):0.6913466779):0.8213375287,24:10.63174611):1.375353913,((((25:3.574139606,26:3.574139606):1.360396113,27:4.934535719):1.420481179,28:6.355016899):1.960033773,29:8.315050671):3.692049354):1.547024237,30:13.55412426):3.175697983,((((31:1.22312664,32:1.22312664):2.535444569,33:3.758571209):1.559460373,34:5.318031582):2.833519283,35:8.151550865):8.57827138):4.111322526,((36:7.362219818,37:7.362219818):5.091706025,(38:2.504304831,39:2.504304831):9.949621012):8.387218927):1.637755409,((40:5.837739339,41:5.837739339):3.147386079,(42:4.216653315,43:4.216653315):4.768472103):13.49377476):0.5310565043,44:23.00995668):1.498770453,((((45:2.712268004,46:2.712268004):7.380093967,47:10.09236197):6.851984046,(48:1.627497345,49:1.627497345):15.31684867):4.570926339,((50:8.820079642,51:8.820079642):4.964407248,52:13.78448689):7.730785466):2.993454781):1.379232147,((53:7.388983029,54:7.388983029):3.949992323,55:11.33897535):14.54898393):2.645383012,(((((((((56:1.96460333,57:1.96460333):1.732951856,58:3.697555186):0.9543062739,(59:3.68797914,60:3.68797914):0.9638823199):0.7376095413,((61:2.267204963,62:2.267204963):1.831287506,63:4.098492469):1.290978532):1.9663194,((64:5.163193905,65:5.163193905):1.455033019,66:6.618226924):0.737563477):1.439638467,(((67:0.6279543808,68:0.6279543808):4.723915439,69:5.351869819):2.203011899,70:7.554881719):1.240547149):3.37140636,71:12.16683523):7.841377866,((((((72:1.79354793,73:1.79354793):4.813787865,74:6.607335795):2.300554899,(75:6.168280123,76:6.168280123):2.739610571):0.5914306834,((77:4.258580071,78:4.258580071):0.9973677135,79:5.255947784):4.243373593):2.841609844,80:12.34093122):3.985134157,81:16.32606538):3.682147716):3.187780872,82:23.19599397):5.33734833):2.481300617,(((83:2.538523173,84:2.538523173):1.564969094,85:4.103492267):9.172953954,86:13.27644622):17.73819669):1.658267662,((((87:13.50355665,88:13.50355665):9.673203423,89:23.17676007):4.226290865,((90:6.506154848,91:6.506154848):10.70896008,92:17.21511493):10.18793601):3.357887751,((93:2.748208523,94:2.748208523):1.982164829,95:4.730373352):26.03056534):1.911971888):6.407050043,((96:6.706003035,97:6.706003035):2.043462324,98:8.749465359):30.33049526):6.954949007,((((((99:1.662522164,100:1.662522164):2.761644803,101:4.424166967):1.861692688,102:6.285859655):4.320156012,((103:2.256186111,104:2.256186111):5.835413307,105:8.091599418):2.514416249):9.811196182,(106:3.4174425,107:3.4174425):16.99976935):15.83184406,((108:3.131003971,109:3.131003971):3.868163273,110:6.999167244):29.24988867):9.785853713);
+END;
